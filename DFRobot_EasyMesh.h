@@ -4,8 +4,8 @@
  * @copyright Copyright (c) 2010 DFRobot Co.Ltd (http://www.dfrobot.com)
  * @license The MIT License (MIT)
  * @author ZhixinLiu(zhixin.liu@dfrobot.com)
- * @version V0.1
- * @date 2022-04-24
+ * @version V0.2
+ * @date 2022-05-20
  * @url https://github.com/DFRobot/DFRobot_EasyMesh
  */
 #ifndef __DFROBOT_EASY_MESH__
@@ -28,16 +28,23 @@
 
 
 #define MESH_I2C_ADDR 0x3A     ///< Chip I2C address, no change address function.
-#define SET_NAME 0x01
-#define SET_GROUP 0x02
-#define GET_DATA_LEN 0x10
-#define GET_DATA 0x11
+
+#define R_NAME_H 0x01
+#define R_NAME_L 0x02
+#define R_GROUP_H 0x03
+#define R_GROUP_L 0x04
+#define R_FLUSH 0x05
+#define R_DATALEN 0x06
+#define R_TYPE 0x07
+#define R_ADDR_H 0x08
+#define R_ADDR_L 0x09
+#define R_VERSION 0xF1
+
 #define SEND_NAME 0x03
 #define SEND_GROUP 0x04
-#define GET_DATALEN 0x10
-#define GET_DATA    0x11
-#define PACKET_HEAD 0x55
-#define PACKET_TAIL 0xAA
+#define FLUSH_DATA 0x01
+#define FLUSH_DATA_EXIST 0x03
+#define FLUSH_DATA_NOEXIST 0x00
 #define NO_GROUP  0
 #define GROUP_1   1<<0
 #define GROUP_2   1<<1
@@ -57,6 +64,7 @@
 #define GROUP_16  1<<15
 
 
+
 typedef struct
 {
   uint16_t sourceAddr;
@@ -74,28 +82,33 @@ public:
 
   void setGroup(uint16_t group);
 
-  uint8_t getdataLen(void);
-
   sMeshData_t getData(void);
 
   void sendName(uint16_t name, const char *data);
 
   void sendGroup(uint16_t group, const char *data);
 
+  char *getVersion(void);
+
 protected:
-  virtual void readData (uint8_t *data ,uint8_t len)=0;
-  virtual void writeData(uint8_t *data ,uint8_t len)=0;
+  virtual void readData(uint8_t reg, uint8_t *data ,uint8_t len)=0;
+  virtual void writeData(uint8_t reg, uint8_t *data, uint8_t len)=0;
+private:
+  uint8_t getdataLen(void);
+  void i2c_flush(void);
+  char _version[10];
 };
 
 class DFRobot_EasyMesh_I2C:public DFRobot_EasyMesh{
 public:
   DFRobot_EasyMesh_I2C(TwoWire *pWire=&Wire ,uint8_t addr=0x3A);
   ~DFRobot_EasyMesh_I2C();
-  void writeData(uint8_t *data,uint8_t len);
-  void readData(uint8_t *data,uint8_t len);
+  void writeData(uint8_t reg, uint8_t *data, uint8_t len);
+  void readData(uint8_t reg, uint8_t *data ,uint8_t len);
   bool begin(void);
 private:
   TwoWire *_pWire;
   uint8_t _I2C_addr;
+  
 };
 #endif
